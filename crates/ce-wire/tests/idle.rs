@@ -52,6 +52,14 @@ async fn door_line(sock: &Path, line: &str) -> String {
     out
 }
 
+/// A loaded machine binds the door later than a fixed sleep: wait until it accepts (at most 10 s).
+async fn door_up(door: SocketAddr) {
+    let up = Instant::now();
+    while std::net::TcpStream::connect(door).is_err() && up.elapsed() < Duration::from_secs(10) {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
 async fn listed(sock: &Path, api: &str) -> bool {
     door_line(sock, "LIST").await.lines().any(|l| l.starts_with(&format!("{api} ")))
 }
@@ -128,7 +136,7 @@ async fn an_idle_cell_stops_and_the_next_call_starts_it() {
     std::env::set_var("CE_DOOR_ROOM", "none");
     std::env::set_var("HOME", &home);
     tokio::spawn(ce_wire::run_door(vec![([127, 0, 0, 1], port).into()], sock.clone()));
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    door_up(SocketAddr::from(([127, 0, 0, 1], port))).await;
     let door = SocketAddr::from(([127, 0, 0, 1], port));
 
     // first call starts it (a spawning Hello, the caller's last step)
@@ -208,7 +216,7 @@ async fn cold_start_of_real_cells() {
     std::env::set_var("CE_WIRE_APPS", &apps);
     std::env::set_var("CE_DOOR_ROOM", "none");
     tokio::spawn(ce_wire::run_door(vec![([127, 0, 0, 1], port).into()], sock.clone()));
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    door_up(SocketAddr::from(([127, 0, 0, 1], port))).await;
     for (api, _) in &pairs {
         let mut ms = Vec::new();
         for _ in 0..5 {
@@ -285,11 +293,7 @@ async fn a_cell_saves_before_it_dies() {
     let door = SocketAddr::from(([127, 0, 0, 1], port));
     let (srv, door_sock) = (door, sock.clone());
     tokio::spawn(ce_wire::run_door(vec![srv], door_sock));
-    // a loaded machine binds the door later than 100 ms: wait until it accepts
-    let up = Instant::now();
-    while std::net::TcpStream::connect(door).is_err() && up.elapsed() < Duration::from_secs(10) {
-        tokio::time::sleep(Duration::from_millis(50)).await;
-    }
+    door_up(door).await;
     let pid = || async {
         let c = Client::<saver::Cell>::connect_opts(door, vec![], true, ce_wire::SPAWN_WAIT + ce_wire::DEADLINE).await.unwrap();
         c.call::<saver::Pid>(&()).await.unwrap().pid
@@ -364,7 +368,7 @@ async fn cold_start_p50_p95() {
     std::env::set_var("CE_WIRE_APPS", &apps);
     std::env::set_var("CE_DOOR_ROOM", "none");
     tokio::spawn(ce_wire::run_door(vec![([127, 0, 0, 1], port).into()], sock.clone()));
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    door_up(SocketAddr::from(([127, 0, 0, 1], port))).await;
     let door = SocketAddr::from(([127, 0, 0, 1], port));
     let t = Instant::now();
     for _ in 0..50 {
