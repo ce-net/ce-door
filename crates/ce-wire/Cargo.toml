@@ -1,0 +1,66 @@
+[package]
+name = "ce-wire"
+version = "0.1.0"
+edition = "2021"
+description = "Typed calls between ce-net apps: no_std frame + op core, tokio client/server with the std feature"
+
+[features]
+# An `<cell>-api` crate depends on ce-wire with default-features = false: types only, no tokio.
+# A client binary enables `client`; a cell enables `server`.
+default = ["server"]
+# Sans-IO client codec (`ce_wire::codec`): handshake, frames and typed decoding over any byte stream. wasm32-clean.
+codec = ["postcard/use-std", "serde/std"]
+client = ["dep:tokio", "postcard/use-std", "serde/std"]
+server = ["client", "dep:nix", "dep:serde_json", "tokio/signal"]
+std = ["client"]
+# Std threads only (serde + postcard, no tokio, no nix): `ce_wire::blocking`. For thread-based daemons.
+blocking = ["postcard/use-std", "serde/std"]
+# blocking::Server::serve_door: std-thread cells behind the door (boards without tokio).
+blocking-door = ["blocking", "dep:nix"]
+
+[dependencies]
+serde = { version = "1", default-features = false, features = ["derive"] }
+postcard = { version = "1.1", default-features = false }
+tokio = { version = "1", optional = true, features = ["net", "io-util", "sync", "time", "rt"] }
+serde_json = { version = "1", optional = true }  # underlay: the network CLIs' --json output
+nix = { version = "0.30", optional = true, default-features = false, features = ["socket", "uio", "signal", "resource"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }  # every cell reads Python-written floats exactly (status.cards t, 2026-10-15)
+
+[[test]]
+name = "blocking"
+required-features = ["server", "blocking"]
+
+[[test]]
+name = "adapt"
+required-features = ["server", "blocking"]
+
+[[test]]
+name = "drift"
+required-features = ["server"]
+
+[[test]]
+name = "restart"
+required-features = ["server"]
+
+[[test]]
+name = "idle"
+required-features = ["server"]
+
+[[test]]
+name = "deadline"
+required-features = ["server", "blocking"]
+
+[[example]]
+name = "door_bench"
+required-features = ["server"]
+
+[[test]]
+name = "audit"
+required-features = ["server"]
+
+[[test]]
+name = "audit_blocking"
+required-features = ["blocking"]

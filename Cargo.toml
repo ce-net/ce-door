@@ -1,0 +1,3 @@
+[workspace]
+resolver = "2"
+members = ["crates/ce-wire", "crates/ce-gate", "crates/door-stranger-check", "crates/door-stranger-check-api"]

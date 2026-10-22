@@ -1,0 +1,8 @@
+[package]
+name = "door-stranger-check-api"
+version = "0.1.0"
+edition = "2021"
+description = "Typed API of the door.stranger-check cell: proves a ce-wire door refuses strangers: for each api, learn the schema from a refusal, then Hello as nobody and as a fresh ungranted key, and ask a stranger spawn; PASS only when every one is refused (types only)"
+
+[dependencies]
+ce-wire = { path = "../ce-wire", default-features = false, features = ["codec"] }

@@ -1,0 +1,12 @@
+# Owner record for the ce-door daemon (the `ce-door` bin of this ce-gate crate).
+# ce-door is the per-node hosting daemon, NOT a ce-wire cell: it runs under systemd / ppid-1,
+# has no typed api, and is never started on-demand by name. This file exists so cell.owner-of
+# resolves `ce-door` to an owner — error.report / drift reports name "ce-door" as the reporter and
+# were routing to NOBODY-OWNS. No [launch] block on purpose:
+# nothing calls "ce-door" as a cell, so the door never autostarts from this.
+[cell]
+api = "ce-door"
+owner = "ce-net"
+kind = "daemon"
+crate = "ce-gate"
+depends_on = []

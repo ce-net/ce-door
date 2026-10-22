@@ -1,0 +1,14 @@
+[package]
+name = "door-stranger-check"
+version = "0.1.0"
+edition = "2021"
+description = "The door.stranger-check cell: proves a ce-wire door refuses strangers: for each api, learn the schema from a refusal, then Hello as nobody and as a fresh ungranted key, and ask a stranger spawn; PASS only when every one is refused"
+
+[dependencies]
+door-stranger-check-api = { path = "../door-stranger-check-api" }
+ce-wire = { path = "../ce-wire" }
+ce-gate = { path = "../ce-gate" }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "net", "time", "sync"] }
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
