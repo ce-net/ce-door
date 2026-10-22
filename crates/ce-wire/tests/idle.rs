@@ -285,7 +285,11 @@ async fn a_cell_saves_before_it_dies() {
     let door = SocketAddr::from(([127, 0, 0, 1], port));
     let (srv, door_sock) = (door, sock.clone());
     tokio::spawn(ce_wire::run_door(vec![srv], door_sock));
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    // a loaded machine binds the door later than 100 ms: wait until it accepts
+    let up = Instant::now();
+    while std::net::TcpStream::connect(door).is_err() && up.elapsed() < Duration::from_secs(10) {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
     let pid = || async {
         let c = Client::<saver::Cell>::connect_opts(door, vec![], true, ce_wire::SPAWN_WAIT + ce_wire::DEADLINE).await.unwrap();
         c.call::<saver::Pid>(&()).await.unwrap().pid
