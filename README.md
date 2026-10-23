@@ -18,6 +18,17 @@ cargo test
 cargo run -p door-stranger-check -- check 127.0.0.1:7700 <api>...    # exit 0 PASS, 1 OPEN, 2 INCONCLUSIVE
 ```
 
+## What the gate costs
+
+The same echo cell behind the gate (a signed Hello and a ce-cap chain) and behind an open door, on loopback:
+
+```sh
+cargo run --release -p ce-gate --example gate_bench -- 2000 20000    # connects, calls
+```
+
+It prints p50/p99 for signing and checking a Hello in process, for connect + first call, and for a call on an open
+connection. On one 16-core Neoverse-N1: the check adds about 0.9 ms once per connection and nothing measurable per call.
+
 ## License
 
 AGPL-3.0, or a commercial license: see [LICENSING.md](LICENSING.md).
